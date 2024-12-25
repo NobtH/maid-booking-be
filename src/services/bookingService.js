@@ -7,7 +7,7 @@ export const checkUserExists = async (userId) => {
   try {
     const db = GET_DB()
     const user = await db.collection('users').findOne({ _id: new ObjectId(userId) })
-    return !!user // Trả về true nếu User tồn tại, ngược lại là false
+    return !!user
   } catch (error) {
     throw new Error('Error checking user existence in database')
   }
@@ -17,7 +17,7 @@ export const checkMaidExists = async (maidId) => {
   try {
     const db = GET_DB()
     const maid = await db.collection('maids').findOne({ _id: new ObjectId(maidId) })
-    return !!maid // Trả về true nếu Maid tồn tại, ngược lại là false
+    return !!maid
   } catch (error) {
     throw new Error('Error checking maid existence in database')
   }
@@ -26,13 +26,11 @@ export const checkMaidExists = async (maidId) => {
 
 export const createBookingService = async (bookingData) => {
   try {
-    // Validate input data
     const { error } = bookingValidationSchema.validate(bookingData)
     if (error) {
       throw new Error(error.details[0].message)
     }
 
-    // Kiểm tra User tồn tại
     const userExists = await checkUserExists(bookingData.userId)
     if (!userExists) {
       throw new Error('User does not exist.')
@@ -44,7 +42,7 @@ export const createBookingService = async (bookingData) => {
 
     const result = await db.collection('bookings').insertOne({
       userId: new ObjectId(bookingData.userId),
-      maidId: null, // Maid sẽ được gán sau
+      maidId: null,
       date: new Date(bookingData.date),
       hours: bookingData.hours,
       price: bookingData.price,
@@ -57,7 +55,7 @@ export const createBookingService = async (bookingData) => {
       acknowledged: result.acknowledged,
       insertedId: result.insertedId,
       ...bookingData,
-      maidId: null // Đảm bảo maidId luôn null tại thời điểm tạo
+      maidId: null
     }
   } catch (error) {
     throw new Error(`Error creating booking in database: ${error.message}`)
@@ -83,7 +81,6 @@ export const getBookingByIdService = async (id) => {
 
 export const updateBookingService = async (bookingId, updateData) => {
   try {
-    // Validate input data
     const { error } = bookingUpdateValidationSchema.validate(updateData)
     if (error) {
       throw new Error(error.details[0].message)
@@ -91,7 +88,6 @@ export const updateBookingService = async (bookingId, updateData) => {
 
     const db = GET_DB()
 
-    // Xử lý cập nhật maidId nếu được cung cấp, không bắt buộc
     if (updateData.maidId) {
       updateData.maidId = new ObjectId(updateData.maidId)
       const maidExists = await checkMaidExists(updateData.maidId)
@@ -100,15 +96,13 @@ export const updateBookingService = async (bookingId, updateData) => {
       }
     }
 
-
-    // Cập nhật thông tin booking trong MongoDB
     const result = await db.collection('bookings').findOneAndUpdate(
-      { _id: new ObjectId(bookingId) }, // Điều kiện tìm kiếm
-      { $set: { ...updateData, updatedAt: new Date() } }, // Cập nhật dữ liệu và updatedAt
-      { returnDocument: 'after' } // Trả về document sau khi cập nhật
+      { _id: new ObjectId(bookingId) },
+      { $set: { ...updateData, updatedAt: new Date() } },
+      { returnDocument: 'after' }
     )
 
-    return result.value // Trả về booking sau khi cập nhật
+    return result.value
   } catch (error) {
     throw new Error(`Error updating booking in database: ${error.message}`)
   }
@@ -118,10 +112,9 @@ export const deleteBookingByIdService = async (bookingId) => {
   try {
     const db = GET_DB()
 
-    // Xóa booking trong MongoDB
     const result = await db.collection('bookings').deleteOne({ _id: new ObjectId(bookingId) })
 
-    return result // Trả về kết quả xóa
+    return result
   } catch (error) {
     throw new Error('Error deleting booking in database')
   }

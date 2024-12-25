@@ -31,7 +31,6 @@ export const getUserByIdService = async (id) => {
 
 export const updateUserByIdService = async (id, data) => {
   try {
-    // Validate input data
     const { error } = userUpdateValidationSchema.validate(data)
     if (error) {
       throw new Error(error.details[0].message)
@@ -39,7 +38,6 @@ export const updateUserByIdService = async (id, data) => {
 
     const db = GET_DB()
 
-    // If password is being updated, hash it
     if (data.password) {
       const salt = await bcrypt.genSalt(10)
       data.password = await bcrypt.hash(data.password, salt)
@@ -61,7 +59,6 @@ export const deleteUserByIdService = async (id) => {
   try {
     const db = GET_DB()
 
-    // Lấy thông tin user để kiểm tra role
     const user = await db.collection('users').findOne({ _id: new ObjectId(id) })
 
     if (!user) {
@@ -70,12 +67,10 @@ export const deleteUserByIdService = async (id) => {
 
     let maidDeletionResult = null
 
-    // Nếu user có role là 'maid', xóa dữ liệu trong maids
     if (user.role === 'maid') {
       maidDeletionResult = await db.collection('maids').deleteOne({ userId: new ObjectId(id) })
     }
 
-    // Xóa user khỏi collection users
     const userDeletionResult = await db.collection('users').deleteOne({ _id: new ObjectId(id) })
 
     return {

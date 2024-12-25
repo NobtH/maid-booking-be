@@ -5,7 +5,6 @@ export const createReviewService = async (reviewData) => {
   try {
     const db = GET_DB()
 
-    // Kiểm tra booking tồn tại và trạng thái của nó
     const booking = await db.collection('bookings').findOne({
       _id: new ObjectId(reviewData.bookingId)
     })

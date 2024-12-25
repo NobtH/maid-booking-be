@@ -14,7 +14,6 @@ const START_SERVER = () => {
 
   app.use(express.json())
 
-  // Định nghĩa route cơ bản
   app.get('/', (req, res) => {
     res.end('<h1>Hello World!</h1><hr>')
   })
@@ -26,28 +25,24 @@ const START_SERVER = () => {
 
   app.use(errorHandlingMiddleware)
 
-  // Middleware xử lý lỗi (nếu có)
   app.use((err, req, res, next) => {
     console.error('Error:', err.message)
     res.status(500).json({ error: 'Internal Server Error' })
     next()
   })
 
-  // Khởi động server
   app.listen(env.APP_PORT, env.APP_HOST, () => {
     console.log(
       `Hello ${env.AUTHOR}, I am running at http://${env.APP_HOST}:${env.APP_PORT}/`
     )
   })
 
-  // Đảm bảo ngắt kết nối khi thoát ứng dụng
   exitHook(async () => {
-    await CLOSE_DB() // Đảm bảo MongoDB được đóng hoàn toàn
+    await CLOSE_DB()
     console.log('Server disconnected successfully.')
   })
 }
 
-// Kết nối MongoDB trước khi khởi động server
 CONNECT_DB()
   .then(() => {
     console.log('Successfully connected to MongoDB')
@@ -55,5 +50,5 @@ CONNECT_DB()
   })
   .catch((error) => {
     console.error('Failed to connect to MongoDB:', error.message)
-    process.exit(1) // Thoát ứng dụng nếu không kết nối được
+    process.exit(1)
   })

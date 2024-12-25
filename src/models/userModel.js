@@ -17,7 +17,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function (v) {
-        return /\d{10}/.test(v) // Kiểm tra số điện thoại phải là 10 chữ số
+        return /\d{10}/.test(v) 
       },
       message: (props) => `${props.value} is not a valid phone number!`
     }

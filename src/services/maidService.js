@@ -13,18 +13,16 @@ export const createMaidService = async (maidData) => {
     }
     const db = GET_DB()
 
-    // Kiểm tra User tồn tại trước khi tạo Maid
     const user = await db.collection('users').findOne({ _id: new ObjectId(maidData.userId) })
     if (!user) {
       throw new Error('User does not exist.')
     }
 
-    // Chèn thông tin Maid cơ bản từ User
     const result = await db.collection('maids').insertOne({
       userId: new ObjectId(maidData.userId),
-      experience: maidData.experience || 0, // Nếu không có, dùng giá trị mặc định
-      hourlyRate: maidData.hourlyRate || 0, // Nếu không có, dùng giá trị mặc định
-      location: maidData.location || '', // Nếu không có, dùng giá trị mặc định
+      experience: maidData.experience || 0,
+      hourlyRate: maidData.hourlyRate || 0,
+      location: maidData.location || '',
       ratings: [],
       totalRatings: 0,
       totalScore: 0,
@@ -62,10 +60,9 @@ export const getMaidByUserIdService = async (userId) => {
   try {
     const db = GET_DB()
 
-    // Tìm kiếm maid theo userId
     const maid = await db.collection('maids').findOne({ userId: new ObjectId(userId) })
 
-    return maid // Trả về thông tin maid
+    return maid
   } catch (error) {
     throw new Error('Error fetching maid by userId from database')
   }
@@ -73,7 +70,6 @@ export const getMaidByUserIdService = async (userId) => {
 
 export const updateMaidByIdService = async (id, data) => {
   try {
-    // Validate input data
     const { error } = maidUpdateValidationSchema.validate(data)
     if (error) {
       throw new Error(error.details[0].message)
@@ -97,19 +93,17 @@ export const updateUserForMaidService = async (userId, updateData) => {
   try {
     const db = GET_DB()
 
-    // Xóa các trường không cần thiết nếu không được truyền vào
     const filteredData = Object.fromEntries(
       Object.entries(updateData).filter(([_, value]) => value !== undefined)
     )
 
-    // Cập nhật thông tin user trong MongoDB
     const result = await db.collection('users').findOneAndUpdate(
-      { _id: new ObjectId(userId) }, // Điều kiện tìm kiếm
-      { $set: filteredData }, // Dữ liệu cần cập nhật
-      { returnDocument: 'after', upsert: false } // Trả về tài liệu sau khi cập nhật
+      { _id: new ObjectId(userId) },
+      { $set: filteredData },
+      { returnDocument: 'after', upsert: false }
     )
 
-    return result // Trả về user sau khi cập nhật
+    return result
   } catch (error) {
     throw new Error('Error updating user for maid in database')
   }
