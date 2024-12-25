@@ -9,10 +9,13 @@ export const createReviewService = async (reviewData) => {
       _id: new ObjectId(reviewData.bookingId)
     })
 
+    if (!booking) {
+      throw new Error('Booking not found')
+    }
+
     if (booking.userId.toString() !== reviewData.userId) {
       throw new Error('User is not associated with this booking')
     }
-
 
     if (!booking) {
       throw new Error('Booking not found')
@@ -31,6 +34,26 @@ export const createReviewService = async (reviewData) => {
       createdAt: new Date(),
       updatedAt: new Date()
     })
+
+    const maid = await db.collection('maids').findOne({
+      _id: new ObjectId(reviewData.maidId)
+    })
+
+    if (maid) {
+      const newTotalRatings = maid.totalRatings + 1
+      const newTotalScore = maid.totalScore + reviewData.rating
+
+      await db.collection('maids').updateOne(
+        { _id: new ObjectId(reviewData.maidId) },
+        {
+          $set: {
+            totalRatings: newTotalRatings,
+            totalScore: newTotalScore,
+            updatedAt: new Date()
+          }
+        }
+      )
+    }
 
     return {
       acknowledged: result.acknowledged,
@@ -71,13 +94,35 @@ export const updateReviewService = async (userId, reviewId, updateData) => {
       throw new Error('Review not found or user not authorized')
     }
 
+    const oldRating = review.rating
+
     const result = await db.collection('reviews').findOneAndUpdate(
       { _id: new ObjectId(reviewId) },
       { $set: { ...updateData, updatedAt: new Date() } },
       { returnDocument: 'after' }
     )
 
-    return result.value
+    if (updateData.rating && updateData.rating !== oldRating) {
+      const maid = await db.collection('maids').findOne({
+        _id: new ObjectId(review.maidId)
+      })
+
+      if (maid) {
+        const newTotalScore = maid.totalScore - oldRating + updateData.rating
+
+        await db.collection('maids').updateOne(
+          { _id: new ObjectId(review.maidId) },
+          {
+            $set: {
+              totalScore: newTotalScore,
+              updatedAt: new Date()
+            }
+          }
+        )
+      }
+    }
+
+    return result
   } catch (error) {
     throw new Error(`Error updating review: ${error.message}`)
   }

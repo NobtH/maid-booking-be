@@ -17,21 +17,6 @@ MaidSchema.virtual('averageRating').get(function () {
   return this.totalRatings > 0 ? this.totalScore / this.totalRatings : 0
 })
 
-MaidSchema.pre('save', function (next) {
-  if (this.isModified('ratings')) {
-    this.totalRatings = this.ratings.length
-    this.totalScore = this.ratings.reduce((acc, rating) => acc + rating, 0)
-  }
-  next()
-})
-
-MaidSchema.methods.updateRatings = function (newRating) {
-  this.ratings.push(newRating)
-  this.totalRatings = this.ratings.length
-  this.totalScore = this.ratings.reduce((acc, rating) => acc + rating, 0)
-  return this.save()
-}
-
 const Maid = mongoose.model('Maid', MaidSchema)
 
 export default Maid

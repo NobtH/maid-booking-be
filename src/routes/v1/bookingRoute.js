@@ -10,7 +10,6 @@ import { validateInput } from '~/validations/validateInput'
 
 const bookingRouter = express.Router()
 
-// Route để tạo bài yêu cầu
 bookingRouter.post('/booking', validateInput(bookingValidationSchema), createBooking)
 bookingRouter.get('/booking', getBookings)
 bookingRouter.get('/booking/:id', getBookingById)
