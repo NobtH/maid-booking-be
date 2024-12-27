@@ -1,9 +1,6 @@
 /* eslint-disable no-console */
 import { env } from '~/config/environment'
-import mongoose from 'mongoose';
-
-let maidBookingInstance = null
-let mongoClientInstance = null
+import mongoose from 'mongoose'
 
 export const CONNECT_DB = async () => {
   if (!env.MONGODB_URI || !env.DATABASE_NAME) {
@@ -11,31 +8,20 @@ export const CONNECT_DB = async () => {
   }
 
   try {
-    // Kết nối Mongoose
-    await mongoose.connect(env.MONGODB_URI, {
-      // useNewUrlParser: true,
-      // useUnifiedTopology: true,
-    });
+    await mongoose.connect(env.MONGODB_URI, {})
 
-    console.log('MongoDB Connected successfully with Mongoose!');
+    console.log('MongoDB Connected successfully with Mongoose!')
   } catch (error) {
-    console.error('Error connecting to MongoDB with Mongoose:', error.message);
-    throw error;
+    console.error('Error connecting to MongoDB with Mongoose:', error.message)
+    throw error
   }
-}
-
-export const GET_DB = () => {
-  if (!maidBookingInstance) {
-    throw new Error('Must connect to db first!')
-  }
-  return maidBookingInstance
 }
 
 export const CLOSE_DB = async () => {
   try {
-    await mongoose.disconnect();
-    console.log('MongoDB Disconnected successfully!');
+    await mongoose.disconnect()
+    console.log('MongoDB Disconnected successfully!')
   } catch (error) {
-    console.error('Error disconnecting MongoDB:', error.message);
+    console.error('Error disconnecting MongoDB:', error.message)
   }
-};
+}

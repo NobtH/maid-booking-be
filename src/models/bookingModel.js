@@ -1,23 +1,23 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const BookingSchema = new mongoose.Schema(
   {
-    maidId: { type: mongoose.Schema.Types.ObjectId, ref: 'Maid', required: false }, // Maid nhận booking
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // User tạo booking
-    date: { type: Date, required: true }, // Ngày booking
-    hours: { type: Number, required: true }, // Số giờ làm việc
-    price: { type: Number, required: true }, // Tổng giá
-    location: { type: String, required: true }, // Địa điểm làm việc
-    phone: { type: String, required: true }, // Số điện thoại người đặt
+    maidId: { type: mongoose.Schema.Types.ObjectId, ref: 'Maid', required: false },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    date: { type: Date, required: true },
+    hours: { type: Number, required: true },
+    price: { type: Number, required: true },
+    location: { type: String, required: true },
+    phone: { type: String, required: true },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'completed', 'cancelled'], // Trạng thái
-      default: 'pending',
-    },
+      enum: ['pending', 'confirmed', 'completed', 'cancelled'],
+      default: 'pending'
+    }
   },
-  { timestamps: true } // Tự động thêm `createdAt` và `updatedAt`
-);
+  { timestamps: true }
+)
 
-const Booking = mongoose.model('Booking', BookingSchema);
+const Booking = mongoose.model('Booking', BookingSchema)
 
-export default Booking;
+export default Booking

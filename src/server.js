@@ -3,10 +3,14 @@ import express from 'express'
 import { CONNECT_DB, CLOSE_DB } from '~/config/mongodb'
 import exitHook from 'async-exit-hook'
 import { errorHandlingMiddleware } from '~/middlewares/errorHandlingMiddleware'
-import authRouter from '~/routes/v1/authRoute'
-import dotenv from 'dotenv';
-import bookingRouter from './routes/v1/bookingRoute'
-dotenv.config();
+import authRouter from '~/routes/authRoute'
+import dotenv from 'dotenv'
+import bookingRouter from '~/routes/bookingRoute'
+import reviewRouter from '~/routes/reviewRoute'
+import cron from 'node-cron'
+import { sendReminderEmails } from '~/services/emailService'
+
+dotenv.config()
 
 const START_SERVER = () => {
   const app = express()
@@ -19,6 +23,7 @@ const START_SERVER = () => {
 
   app.use('/api', authRouter)
   app.use('/api', bookingRouter)
+  app.use('/api', reviewRouter)
 
 
   app.use(errorHandlingMiddleware)
@@ -27,6 +32,11 @@ const START_SERVER = () => {
     console.error('Error:', err.message)
     res.status(500).json({ error: 'Internal Server Error' })
     next()
+  })
+
+  cron.schedule('0 8 * * *', async () => {
+    console.log('Running reminder email job...')
+    await sendReminderEmails()
   })
 
   app.listen(process.env.APP_PORT, process.env.APP_HOST, () => {

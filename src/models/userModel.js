@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
 
 const UserSchema = new mongoose.Schema({
   name: {
@@ -40,5 +39,5 @@ const UserSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-const User = mongoose.model('users', UserSchema)
+const User = mongoose.model('User', UserSchema)
 export default User;

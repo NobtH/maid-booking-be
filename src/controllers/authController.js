@@ -58,35 +58,30 @@ export const loginController = async (req, res) => {
   try {
     const { email, password } = req.body
 
-    // Kiểm tra nếu email hoặc password không được cung cấp
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required.' })
     }
 
-    // Tìm người dùng theo email
     const user = await User.findOne({ email })
     if (!user) {
       return res.status(401).json({ message: 'Invalid email' })
     }
 
-    // So sánh mật khẩu
     const isPasswordValid = await bcrypt.compare(password, user.password)
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid password.' })
     }
 
-    // Tạo JWT token
     const token = jwt.sign(
       {
         id: user._id,
         role: user.role,
         email: user.email
       },
-      process.env.JWT_SECRET, // Đảm bảo bạn đã cấu hình `JWT_SECRET` trong `.env`
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } // Thời gian hết hạn token
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     )
 
-    // Trả về kết quả
     res.status(200).json({
       message: 'Login successful.',
       token,
@@ -114,15 +109,16 @@ export const forgotPasswordController = async (req, res) => {
     if (!newPassword) {
       res.status(400).send({ message: 'New Password is required' })
     }
-    // Check user
+
     const user = await User.findOne({ email, answer })
+
     if (!user) {
       return res.status(404).send({
         success: false,
         message: 'Wrong Email or Answer'
       })
     }
-    // Hash new password
+
     const hashed = await hashPassword(newPassword)
     await User.findByIdAndUpdate(user._id, { password: hashed })
     res.status(200).send({
@@ -154,22 +150,18 @@ export const getAllUsers = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
-    const { userId } = req.params // Lấy `userId` từ URL
+    const { userId } = req.params
 
-    // Kiểm tra nếu người dùng không phải admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied: Only admins can delete users.' })
     }
 
-    // Tìm và xóa người dùng
     const deletedUser = await User.findByIdAndDelete(userId)
 
-    // Nếu người dùng không tồn tại
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    // Trả về kết quả thành công
     res.status(200).json({
       message: 'User deleted successfully.',
       deletedUser: {
@@ -188,10 +180,8 @@ export const updateProfile = async (req, res) => {
   try {
     const { name, phone, address, password, age, experience, hourlyRate, location } = req.body
 
-    // Xác thực người dùng từ token
     const userId = req.user.id
 
-    // Kiểm tra nếu người dùng gửi mật khẩu mới
     let updatedData = { name, phone, address }
     if (password) {
       if (password.length < 6) {
@@ -201,19 +191,16 @@ export const updateProfile = async (req, res) => {
       updatedData.password = await bcrypt.hash(password, 10)
     }
 
-    // Cập nhật thông tin cơ bản của người dùng
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: updatedData },
       { new: true, runValidators: true }
     )
 
-    // Nếu người dùng không tồn tại
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    // Nếu người dùng là maid, cập nhật thêm thông tin maid
     let updatedMaid = null
     if (updatedUser.role === 'maid') {
       let maidData = {}

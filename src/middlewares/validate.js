@@ -1,6 +1,5 @@
 import Joi from 'joi';
 
-// Schema validate cho đăng ký
 export const registerValidationSchema = Joi.object({
   name: Joi.string().min(3).max(50).required().messages({
     'string.empty': 'Name is required.',
@@ -59,7 +58,6 @@ export const registerValidationSchema = Joi.object({
   })
 });
 
-// Middleware để validate request
 export const validateRegister = (req, res, next) => {
   const { error } = registerValidationSchema.validate(req.body);
   if (error) {
