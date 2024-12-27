@@ -43,7 +43,7 @@ export const acceptBooking = async (req, res) => {
     const { bookingId } = req.params
     const maidId = req.user.id
 
-    const booking = await Booking.findById(bookingId)
+    const booking = await Booking.findById(bookingId).populate('userId')
 
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found.' })

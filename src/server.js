@@ -7,6 +7,7 @@ import authRouter from '~/routes/authRoute'
 import dotenv from 'dotenv'
 import bookingRouter from '~/routes/bookingRoute'
 import reviewRouter from '~/routes/reviewRoute'
+import adminRouter from '~/routes/adminRoute'
 import cron from 'node-cron'
 import { sendReminderEmails } from '~/services/emailService'
 
@@ -24,6 +25,7 @@ const START_SERVER = () => {
   app.use('/api', authRouter)
   app.use('/api', bookingRouter)
   app.use('/api', reviewRouter)
+  app.use('/api', adminRouter)
 
 
   app.use(errorHandlingMiddleware)

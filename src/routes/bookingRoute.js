@@ -17,7 +17,7 @@ bookingRouter.put('/bookings/:bookingId/accept', requireSignIn, isMaid, acceptBo
 
 bookingRouter.put('/bookings/:bookingId/complete', requireSignIn, isMaid, completeBooking)
 
-bookingRouter.put('/bookings/:bookingId/cancel', requireSignIn, cancelBooking);
+bookingRouter.put('/bookings/:bookingId/cancel', requireSignIn, cancelBooking)
 
 bookingRouter.put('/bookings/:bookingId', requireSignIn, updateBookingByUser)
 

@@ -4,7 +4,8 @@ import { registerController,
   forgotPasswordController,
   getAllUsers,
   deleteUser,
-  updateProfile } from '~/controllers/authController.js'
+  updateProfile,
+  getUser } from '~/controllers/authController.js'
 import { validateRegister } from '~/middlewares/validate.js'
 import { requireSignIn, isAdmin } from '~/middlewares/authValidation'
 
@@ -20,7 +21,7 @@ authRouter.get('/protected-route', requireSignIn, (req, res) => {
   res.status(200).json({ message: 'You have access.', user: req.user })
 })
 
-authRouter.get('/users', requireSignIn, isAdmin, getAllUsers)
+authRouter.get('/users/:userId', requireSignIn, isAdmin, getUser)
 
 authRouter.delete('/users/:userId', requireSignIn, isAdmin, deleteUser)
 

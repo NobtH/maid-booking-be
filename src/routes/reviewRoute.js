@@ -8,6 +8,6 @@ reviewRouter.post('/reviews', requireSignIn, addReview)
 
 reviewRouter.get('/reviews/maid/:maidId', requireSignIn, getReviewsForMaid)
 
-reviewRouter.get('/reviews/my', requireSignIn, getMyReviews)
+reviewRouter.get('/reviews/myReview', requireSignIn, getMyReviews)
 
 export default reviewRouter

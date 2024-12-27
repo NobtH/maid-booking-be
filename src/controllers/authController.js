@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt'
 import User from '~/models/userModel'
 import Maid from '~/models/maidModel.js'
+import Booking from '~/models/bookingModel'
+import Review from '~/models/reviewModel'
 import jwt from 'jsonwebtoken'
 import { hashPassword } from '~/helpers/authHelper'
 
@@ -145,6 +147,39 @@ export const getAllUsers = async (req, res) => {
     })
   } catch (error) {
     res.status(500).json({ message: error.message })
+  }
+}
+
+export const getUser = async (req, res) => {
+  try {
+    const { userId } = req.params
+
+    // Tìm người dùng theo ID
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' })
+    }
+
+    // Lấy danh sách booking của user
+    const bookings = await Booking.find({ userId })
+      .populate('maidId', 'name location') // Lấy thông tin Maid liên quan
+      .populate('userId', 'name email') // Lấy thông tin User (nếu cần thiết)
+
+    // Lấy danh sách review của user
+    const reviews = await Review.find({ userId })
+      .populate('maidId', 'name location') // Lấy thông tin Maid liên quan
+      .populate('bookingId', 'date price') // Lấy thông tin Booking (nếu cần)
+
+    // Trả về thông tin người dùng, booking và review
+    res.status(200).json({
+      message: 'User retrieved successfully.',
+      user,
+      bookings,
+      reviews
+    })
+  } catch (error) {
+    console.error('Error retrieving user:', error.message)
+    res.status(500).json({ message: 'Internal server error.', error: error.message })
   }
 }
 
