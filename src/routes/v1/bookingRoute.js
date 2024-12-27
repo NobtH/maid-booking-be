@@ -1,20 +1,11 @@
 import express from 'express'
-import { createBooking,
-  getBookings,
-  getBookingById,
-  updateBooking,
-  deleteBooking,
-  getReviewByBookingId } from '~/controllers/bookingController'
-import { bookingUpdateValidationSchema, bookingValidationSchema } from '~/validations/bookingValidation'
-import { validateInput } from '~/validations/validateInput'
-
+import { createBooking, acceptBooking, completeBooking } from '~/controllers/bookingController';
+import { requireSignIn, isMaid } from '~/middlewares/authValidation';
 const bookingRouter = express.Router()
 
-bookingRouter.post('/booking', validateInput(bookingValidationSchema), createBooking)
-bookingRouter.get('/booking', getBookings)
-bookingRouter.get('/booking/:id', getBookingById)
-bookingRouter.put('/booking/:id', validateInput(bookingUpdateValidationSchema), updateBooking)
-bookingRouter.delete('/booking/:id', deleteBooking)
-bookingRouter.get('/booking/:id/review', getReviewByBookingId)
+bookingRouter.post('/bookings', requireSignIn, createBooking); 
+bookingRouter.put('/bookings/:bookingId/accept', requireSignIn, isMaid, acceptBooking);
+bookingRouter.put('/bookings/:bookingId/complete', requireSignIn, isMaid, completeBooking);
 
-export default bookingRouter
+
+export default bookingRouter;

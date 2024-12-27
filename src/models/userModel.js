@@ -1,4 +1,5 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
 const UserSchema = new mongoose.Schema({
   name: {
@@ -13,11 +14,17 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     match: [/\S+@\S+\.\S+/, 'Email is not valid.']
   },
+  password: {
+    type: String,
+    required: [true, 'Password is required.'],
+    minlength: [6, 'Password must be at least 6 characters long.']
+  },
   phone: {
     type: String,
+    unique: true,
     validate: {
       validator: function (v) {
-        return /\d{10}/.test(v) 
+        return /\d{10}/.test(v);
       },
       message: (props) => `${props.value} is not a valid phone number!`
     }
@@ -26,16 +33,12 @@ const UserSchema = new mongoose.Schema({
     type: String,
     maxlength: [200, 'Address cannot exceed 200 characters.']
   },
-  password: {
-    type: String,
-    required: [true, 'Password is required.'],
-    minlength: [6, 'Password must be at least 6 characters long.']
-  },
   role: {
     type: String,
     enum: ['user', 'maid', 'admin'],
     default: 'user'
-  },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-})
+  }
+}, { timestamps: true });
+
+const User = mongoose.model('users', UserSchema)
+export default User;

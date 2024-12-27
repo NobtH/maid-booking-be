@@ -2,12 +2,11 @@
 import express from 'express'
 import { CONNECT_DB, CLOSE_DB } from '~/config/mongodb'
 import exitHook from 'async-exit-hook'
-import { env } from '~/config/environment'
-import userRouter from './routes/v1/userRoute'
-import { errorHandlingMiddleware } from './middlewares/errorHandlingMiddleware'
-import maidRouter from './routes/v1/maidRoute'
+import { errorHandlingMiddleware } from '~/middlewares/errorHandlingMiddleware'
+import authRouter from '~/routes/v1/authRoute'
+import dotenv from 'dotenv';
 import bookingRouter from './routes/v1/bookingRoute'
-import reviewRouter from './routes/v1/reviewRoute'
+dotenv.config();
 
 const START_SERVER = () => {
   const app = express()
@@ -18,10 +17,9 @@ const START_SERVER = () => {
     res.end('<h1>Hello World!</h1><hr>')
   })
 
-  app.use('/v1', userRouter)
-  app.use('/v1', maidRouter)
-  app.use('/v1', bookingRouter)
-  app.use('/v1', reviewRouter)
+  app.use('/api', authRouter)
+  app.use('/api', bookingRouter)
+
 
   app.use(errorHandlingMiddleware)
 
@@ -31,9 +29,9 @@ const START_SERVER = () => {
     next()
   })
 
-  app.listen(env.APP_PORT, env.APP_HOST, () => {
+  app.listen(process.env.APP_PORT, process.env.APP_HOST, () => {
     console.log(
-      `Hello ${env.AUTHOR}, I am running at http://${env.APP_HOST}:${env.APP_PORT}/`
+      `Hello ${process.env.AUTHOR}, I am running at http://${process.env.APP_HOST}:${process.env.APP_PORT}/`
     )
   })
 

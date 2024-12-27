@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { env } from '~/config/environment'
-import { MongoClient, ServerApiVersion } from 'mongodb'
+import mongoose from 'mongoose';
 
 let maidBookingInstance = null
 let mongoClientInstance = null
@@ -11,26 +11,16 @@ export const CONNECT_DB = async () => {
   }
 
   try {
-    if (mongoClientInstance) {
-      console.log('Connected MongoDB!')
-      return
-    }
+    // Kết nối Mongoose
+    await mongoose.connect(env.MONGODB_URI, {
+      // useNewUrlParser: true,
+      // useUnifiedTopology: true,
+    });
 
-    mongoClientInstance = new MongoClient(env.MONGODB_URI, {
-      serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true
-      }
-    })
-
-    await mongoClientInstance.connect()
-    console.log('MongoDB Connected successfully!')
-
-    maidBookingInstance = mongoClientInstance.db(env.DATABASE_NAME)
+    console.log('MongoDB Connected successfully with Mongoose!');
   } catch (error) {
-    console.error('Error connect MongoDB:', error.message)
-    throw error
+    console.error('Error connecting to MongoDB with Mongoose:', error.message);
+    throw error;
   }
 }
 
@@ -42,11 +32,10 @@ export const GET_DB = () => {
 }
 
 export const CLOSE_DB = async () => {
-  if (mongoClientInstance) {
-    console.log('MongoDB Disconnected')
-    await mongoClientInstance.close()
-    mongoClientInstance = null
-    maidBookingInstance = null
-
+  try {
+    await mongoose.disconnect();
+    console.log('MongoDB Disconnected successfully!');
+  } catch (error) {
+    console.error('Error disconnecting MongoDB:', error.message);
   }
-}
+};

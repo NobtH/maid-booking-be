@@ -9,14 +9,12 @@ const MaidSchema = new mongoose.Schema({
   ratings: { type: [Number], default: [] },
   totalRatings: { type: Number, default: 0 },
   totalScore: { type: Number, default: 0 },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
 })
 
 MaidSchema.virtual('averageRating').get(function () {
   return this.totalRatings > 0 ? this.totalScore / this.totalRatings : 0
 })
 
-const Maid = mongoose.model('Maid', MaidSchema)
+const Maid = mongoose.model('Maid', MaidSchema, 'maids')
 
 export default Maid

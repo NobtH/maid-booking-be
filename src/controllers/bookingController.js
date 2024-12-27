@@ -1,114 +1,103 @@
-/* eslint-disable no-console */
-import { createBookingService,
-  checkUserExists,
-  getBookingsService,
-  getBookingByIdService,
-  checkMaidExists,
-  updateBookingService,
-  deleteBookingByIdService,
-  getReviewByBookingIdService
-} from '~/services/bookingService'
+import Booking from '~/models/bookingModel';
+
+import User from '~/models/userModel';
 
 export const createBooking = async (req, res) => {
   try {
-    const { userId, date, hours, price } = req.body
+    const { maidId, date, hours, price, location } = req.body;
+    const userId = req.user.id; // Lấy userId từ token
 
-    if (!userId || !date || !hours || !price) {
-      return res.status(400).json({ error: 'userId, date, and hours are required' })
+    // Tìm thông tin người dùng từ DB
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
     }
 
-
-    const userExists = await checkUserExists(userId)
-    if (!userExists) {
-      return res.status(404).json({ error: 'User does not exist' })
+    if (!date || !hours || !price || !location) {
+      return res.status(400).json({ message: 'Date, hours, price, and location are required.' });
     }
-    const newBooking = await createBookingService({ userId, date, hours, price })
 
-    res.status(201).json(newBooking)
+    const newBooking = await Booking.create({
+      userId,
+      maidId: maidId || null, // Nếu chưa có Maid nhận booking
+      date,
+      hours,
+      price,
+      location,
+      phone: user.phone,
+      status: 'pending',
+    });
+
+    res.status(201).json({
+      message: 'Booking created successfully.',
+      booking: newBooking,
+    });
   } catch (error) {
-    console.error('Error creating booking:', error.message)
-    res.status(500).json({ error: error.message })
+    console.error('Error creating booking:', error.message);
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
   }
-}
+};
 
-export const getBookings = async (req, res) => {
+export const acceptBooking = async (req, res) => {
   try {
-    const bookings = await getBookingsService()
-    res.status(200).json(bookings)
-  } catch (error) {
-    console.error('Error getting bookings:', error.message)
-    res.status(500).json({ error: error.message })
-  }
-}
+    const { bookingId } = req.params; // Lấy bookingId từ URL
+    const maidId = req.user.id; // Lấy maidId từ token
 
-export const getBookingById = async (req, res) => {
-  try {
-    const booking = await getBookingByIdService(req.params.id)
+    // Tìm booking cần được nhận
+    const booking = await Booking.findById(bookingId);
+
     if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' })
+      return res.status(404).json({ message: 'Booking not found.' });
     }
-    res.status(200).json(booking)
-  } catch (error) {
-    console.error('Error getting booking by id:', error.message)
-    res.status(500).json({ error: error.message })
-  }
-}
 
-export const updateBooking = async (req, res) => {
+    // Kiểm tra xem booking đã được nhận hay chưa
+    if (booking.maidId) {
+      return res.status(400).json({ message: 'Booking has already been accepted by another maid.' });
+    }
+
+    // Cập nhật maidId và trạng thái booking
+    booking.maidId = maidId;
+    booking.status = 'confirmed';
+    await booking.save();
+
+    res.status(200).json({
+      message: 'Booking accepted successfully.',
+      booking,
+    });
+  } catch (error) {
+    console.error('Error accepting booking:', error.message);
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
+  }
+};
+
+export const completeBooking = async (req, res) => {
   try {
-    const bookingId = req.params.id
-    const { maidId, ...updateData } = req.body
+    const { bookingId } = req.params;
 
-    if (maidId) {
-      const maidExists = await checkMaidExists(maidId)
-      if (!maidExists) {
-        return res.status(404).json({ error: 'Maid does not exist' })
-      }
-      updateData.maidId = maidId
+    // Tìm booking cần được cập nhật
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found.' });
     }
 
-    const updatedBooking = await updateBookingService(bookingId, updateData)
-
-    if (!updatedBooking) {
-      return res.status(404).json({ error: 'Booking not found' })
+    // Kiểm tra trạng thái hiện tại của booking
+    if (booking.status !== 'confirmed') {
+      return res.status(400).json({ message: 'Only confirmed bookings can be completed.' });
     }
 
-    res.status(200).json(updatedBooking)
+    // Cập nhật trạng thái booking thành "completed"
+    booking.status = 'completed';
+    await booking.save();
+
+    res.status(200).json({
+      message: 'Booking completed successfully.',
+      booking,
+    });
   } catch (error) {
-    console.error('Error updating booking:', error.message)
-    res.status(500).json({ error: error.message })
+    console.error('Error completing booking:', error.message);
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
   }
-}
-
-export const deleteBooking = async (req, res) => {
-  try {
-    const bookingId = req.params.id
-
-    const deletedBooking = await deleteBookingByIdService(bookingId)
-
-    if (!deletedBooking) {
-      return res.status(404).json({ error: 'Booking not found' })
-    }
-
-    res.status(200).json({ message: 'Booking deleted' })
-  } catch (error) {
-    console.error('Error deleting booking:', error.message)
-    res.status(500).json({ error: error.message })
-  }
-}
-
-export const getReviewByBookingId = async (req, res) => {
-  try {
-    const bookingId = req.params.id
-    const review = await getReviewByBookingIdService(bookingId)
-    if (!review) {
-      return res.status(404).json({ error: 'Review not found for this booking' })
-    }
-    res.status(200).json(review)
-  } catch (error) {
-    console.error('Error getting review by booking id:', error.message)
-    res.status(500).json({ error: error.message })
-  }
-}
+};
 
 
