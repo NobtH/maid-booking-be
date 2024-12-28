@@ -5,10 +5,12 @@ const BookingSchema = new mongoose.Schema(
     maidId: { type: mongoose.Schema.Types.ObjectId, ref: 'Maid', required: false },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     date: { type: Date, required: true },
-    hours: { type: Number, required: true },
+    from: { type: String, required: true },
+    to: { type: String, required: true },
     price: { type: Number, required: true },
     location: { type: String, required: true },
     phone: { type: String, required: true },
+    description: { type: String, default: '' },
     status: {
       type: String,
       enum: ['pending', 'confirmed', 'completed', 'cancelled'],

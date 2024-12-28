@@ -5,27 +5,27 @@ import { sendEmail } from '~/services/emailService'
 
 export const createBooking = async (req, res) => {
   try {
-    const { maidId, date, hours, price, location } = req.body
-    const userId = req.user.id
+    const { userId } = req.user
+    const { date, from, to, price, location, phone, description } = req.body
 
     const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    if (!date || !hours || !price || !location) {
-      return res.status(400).json({ message: 'Date, hours, price, and location are required.' })
+    if (!date || !from || !to || !price || !location || !phone) {
+      return res.status(400).json({ message: 'All required fields must be filled.' })
     }
 
     const newBooking = await Booking.create({
       userId,
-      maidId: maidId || null,
       date,
-      hours,
+      from,
+      to,
       price,
       location,
-      phone: user.phone,
-      status: 'pending'
+      phone,
+      description
     })
 
     res.status(201).json({
@@ -64,7 +64,7 @@ export const acceptBooking = async (req, res) => {
         Booking details:
         - Location: ${booking.location}
         - Price: ${booking.price}
-        - Hours: ${booking.hours}
+        - Time: ${booking.from} to ${booking.to}
 
         Thank you for using our service!
       `
@@ -113,7 +113,7 @@ export const updateBookingByUser = async (req, res) => {
   try {
     const { bookingId } = req.params
     const userId = req.user.id
-    const { date, hours, price, location } = req.body
+    const { date, from, to, description, price, location } = req.body
 
     const booking = await Booking.findById(bookingId)
 
@@ -130,7 +130,9 @@ export const updateBookingByUser = async (req, res) => {
     }
 
     if (date) booking.date = date
-    if (hours) booking.hours = hours
+    if (from) booking.hours = from
+    if (to) booking.to = to
+    if (description) booking.description = description
     if (price) booking.price = price
     if (location) booking.location = location
 
