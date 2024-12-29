@@ -2,7 +2,6 @@ import express from 'express'
 import { registerController,
   loginController,
   forgotPasswordController,
-  getAllUsers,
   deleteUser,
   updateProfile,
   getUser } from '~/controllers/authController.js'

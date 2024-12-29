@@ -4,7 +4,6 @@ const MaidSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   age: { type: Number, required: true },
   experience: { type: Number, required: true },
-  hourlyRate: { type: Number, required: true },
   location: { type: String, required: true },
   ratings: { type: [Number], default: [] },
   totalRatings: { type: Number, default: 0 },

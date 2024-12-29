@@ -40,15 +40,15 @@ export const registerValidationSchema = Joi.object({
     }),
     otherwise: Joi.forbidden()
   }),
-  hourlyRate: Joi.when('role', {
-    is: 'maid',
-    then: Joi.number().min(0).required().messages({
-      'number.base': 'Hourly rate must be a number.',
-      'number.min': 'Hourly rate cannot be negative.',
-      'any.required': 'Hourly rate is required for maids.'
-    }),
-    otherwise: Joi.forbidden()
-  }),
+  // hourlyRate: Joi.when('role', {
+  //   is: 'maid',
+  //   then: Joi.number().min(0).required().messages({
+  //     'number.base': 'Hourly rate must be a number.',
+  //     'number.min': 'Hourly rate cannot be negative.',
+  //     'any.required': 'Hourly rate is required for maids.'
+  //   }),
+  //   otherwise: Joi.forbidden()
+  // }),
   location: Joi.when('role', {
     is: 'maid',
     then: Joi.string().required().messages({

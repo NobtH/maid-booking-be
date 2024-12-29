@@ -8,7 +8,7 @@ import { hashPassword } from '~/helpers/authHelper'
 
 export const registerController = async (req, res) => {
   try {
-    const { name, email, password, phone, address, role, age, experience, hourlyRate, location } = req.body
+    const { name, email, password, phone, address, role, age, experience, location } = req.body
 
     const existingUser = await User.findOne({ email })
     if (existingUser) {
@@ -28,7 +28,7 @@ export const registerController = async (req, res) => {
 
     let maid = null
     if (role === 'maid') {
-      if (!age || !experience || !hourlyRate || !location) {
+      if (!age || !experience || !location) {
         return res.status(400).json({ message: 'Missing maid-specific fields.' })
       }
 
@@ -36,7 +36,6 @@ export const registerController = async (req, res) => {
         userId: user._id,
         age,
         experience,
-        hourlyRate,
         location
       })
     }
@@ -135,6 +134,7 @@ export const forgotPasswordController = async (req, res) => {
     })
   }
 }
+
 export const getAllUsers = async (req, res) => {
   try {
     if (req.user.role !== 'admin') {

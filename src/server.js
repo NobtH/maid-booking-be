@@ -8,7 +8,9 @@ import dotenv from 'dotenv'
 import bookingRouter from '~/routes/bookingRoute'
 import reviewRouter from '~/routes/reviewRoute'
 import adminRouter from '~/routes/adminRoute'
+import maidRouter from '~/routes/maidRoute'
 import cron from 'node-cron'
+import cors from 'cors'
 import { sendReminderEmails } from '~/services/emailService'
 
 dotenv.config()
@@ -18,11 +20,15 @@ const START_SERVER = () => {
 
   app.use(express.json())
 
-  app.get('/', (req, res) => {
-    res.end('<h1>Hello World!</h1><hr>')
-  })
+  app.use(cors({
+    origin: 'http://localhost:3000', // Địa chỉ frontend của bạn
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'], // Đảm bảo rằng header Authorization được phép
+  }));
+  app.use(express.json());
 
   app.use('/api', authRouter)
+  app.use('/api', maidRouter);
   app.use('/api', bookingRouter)
   app.use('/api', reviewRouter)
   app.use('/api', adminRouter)
