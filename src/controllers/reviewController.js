@@ -76,3 +76,65 @@ export const getMyReviews = async (req, res) => {
   }
 }
 
+export const updateReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params
+    const { rating, comment } = req.body
+    const userId = req.user.id
+
+    const review = await Review.findById(reviewId)
+
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found.' })
+    }
+
+    if (review.userId.toString() !== userId) {
+      return res.status(403).json({ message: 'Access denied: You are not the owner of this review.' })
+    }
+
+    if (rating) {
+      if (rating < 1 || rating > 5) {
+        return res.status(400).json({ message: 'Rating must be between 1 and 5.' })
+      }
+      review.rating = rating
+    }
+
+    if (comment) {
+      review.comment = comment
+    }
+
+    await review.save()
+
+    res.status(200).json({
+      message: 'Review updated successfully.',
+      review
+    })
+  } catch (error) {
+    console.error('Error updating review:', error.message)
+    res.status(500).json({ message: 'Internal server error.', error: error.message })
+  }
+}
+
+export const deleteReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params
+    const userId = req.user.id
+
+    const review = await Review.findById(reviewId)
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found.' })
+    }
+
+    if (review.userId.toString() !== userId) {
+      return res.status(403).json({ message: 'You are not authorized to delete this review.' })
+    }
+
+    await review.remove()
+
+    res.status(200).json({ message: 'Review deleted successfully.' })
+  } catch (error) {
+    console.error('Error deleting review:', error.message)
+    res.status(500).json({ message: 'Internal server error.', error: error.message })
+  }
+}
+

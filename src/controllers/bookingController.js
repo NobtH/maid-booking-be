@@ -17,6 +17,14 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ message: 'All required fields must be filled.' })
     }
 
+    if (new Date(date) < new Date()) {
+      return res.status(400).json({ message: 'Booking date cannot be in the past.' })
+    }
+
+    if (from >= to) {
+      return res.status(400).json({ message: 'Invalid time range.' })
+    }
+
     const newBooking = await Booking.create({
       userId,
       date,
