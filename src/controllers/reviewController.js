@@ -1,47 +1,71 @@
 /* eslint-disable no-console */
 import Review from '~/models/reviewModel'
 import Booking from '~/models/bookingModel'
+import Maid from '~/models/maidModel'
 
 export const addReview = async (req, res) => {
   try {
-    const { bookingId, rating, comment } = req.body
-    const userId = req.user.id
+    const { bookingId, rating, comment } = req.body;
+    const userId = req.user.id;
 
-    const booking = await Booking.findById(bookingId)
+    // Kiểm tra booking
+    const booking = await Booking.findById(bookingId);
     if (!booking) {
-      return res.status(404).json({ message: 'Booking not found.' })
+      return res.status(404).json({ message: 'Booking not found.' });
     }
 
     if (booking.userId.toString() !== userId) {
-      return res.status(403).json({ message: 'You are not authorized to review this booking.' })
+      return res.status(403).json({ message: 'You are not authorized to review this booking.' });
     }
 
     if (booking.status !== 'completed') {
-      return res.status(400).json({ message: 'You can only review completed bookings.' })
+      return res.status(400).json({ message: 'You can only review completed bookings.' });
     }
 
-    const existingReview = await Review.findOne({ bookingId })
+    // Tìm Maid theo userId
+    const maid = await Maid.findOne({ userId: booking.maidId });
+    if (!maid) {
+      return res.status(404).json({ message: 'Maid not found for this userId.' });
+    }
+
+    // Kiểm tra nếu đã review
+    const existingReview = await Review.findOne({ bookingId });
     if (existingReview) {
-      return res.status(400).json({ message: 'This booking has already been reviewed.' })
+      return res.status(400).json({ message: 'This booking has already been reviewed.' });
     }
 
+    // Tạo review
     const review = await Review.create({
       bookingId,
-      maidId: booking.maidId,
+      maidId: maid._id,
       userId,
       rating,
-      comment
-    })
+      comment,
+    });
+
+    // Cập nhật rating trong Maid
+    maid.totalRatings += 1; // Tăng tổng số đánh giá
+    maid.totalScore += rating; // Cộng tổng điểm đánh giá
+    maid.ratings = (maid.totalScore / maid.totalRatings).toFixed(1); // Tính trung bình
+    await maid.save();
+
+    // Đánh dấu booking đã được review
+    booking.isReviewed = true;
+    await booking.save();
 
     res.status(201).json({
-      message: 'Review added successfully.',
-      review
-    })
+      message: 'Review added successfully and Maid rating updated.',
+      review,
+      maid,
+    });
   } catch (error) {
-    console.error('Error adding review:', error.message)
-    res.status(500).json({ message: 'Internal server error.', error: error.message })
+    console.error('Error adding review:', error.message);
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
   }
-}
+};
+
+
+
 
 export const getReviewsForMaid = async (req, res) => {
   try {

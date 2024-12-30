@@ -4,7 +4,9 @@ import { registerController,
   forgotPasswordController,
   deleteUser,
   updateProfile,
-  getUser } from '~/controllers/authController.js'
+  getUser,
+  getProfile, 
+  getAllUsers} from '~/controllers/authController.js'
 import { validateRegister } from '~/middlewares/validate.js'
 import { requireSignIn, isAdmin } from '~/middlewares/authValidation'
 import User from '~/models/userModel'
@@ -22,6 +24,10 @@ authRouter.get('/protected-route', requireSignIn, async (req, res) => {
   const user = await User.findById(userId);
   res.json(user);
 })
+
+authRouter.get('/users', requireSignIn, getAllUsers)
+
+authRouter.get('/profile', requireSignIn, getProfile)
 
 authRouter.get('/users/:userId', requireSignIn, isAdmin, getUser)
 

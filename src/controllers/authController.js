@@ -135,11 +135,32 @@ export const forgotPasswordController = async (req, res) => {
   }
 }
 
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.user.id
+    const user = await User.findById(userId).select('-_id -createdAt -updatedAt -password'); // Loại bỏ các trường không cần thiết
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    if (user.role === 'maid') {
+      const maid = await Maid.findOne({ userId: userId }).select('-_id -createdAt -updatedAt')
+      console.log('User Info:', user); // Debug thông tin user
+      console.log('Maid Info:', maid);
+      if (!maid) {
+        return res.status(404).json({ message: 'Maid profile not found.' });
+      }
+      return res.json({ ...user.toObject(), ...maid.toObject() }); // Gộp thông tin từ User và Maid
+    }
+
+    res.json(user); 
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
 export const getAllUsers = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied: Not an admin.' })
-    }
     const users = await User.find()
     res.status(200).json({
       message: 'Users retrieved successfully.',

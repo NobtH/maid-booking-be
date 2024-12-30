@@ -1,8 +1,8 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
 const BookingSchema = new mongoose.Schema(
   {
-    maidId: { type: mongoose.Schema.Types.ObjectId, ref: 'Maid', required: false },
+    maidId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     date: { type: Date, required: true },
     from: { type: String, required: true },
@@ -15,12 +15,13 @@ const BookingSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ['pending', 'confirmed', 'completed', 'cancelled'],
-      default: 'pending'
-    }
+      default: 'pending',
+    },
+    isReviewed: { type: Boolean, default: false }
   },
   { timestamps: true }
 )
 
-const Booking = mongoose.model('Booking', BookingSchema)
+const Booking = mongoose.model('Booking', BookingSchema);
 
-export default Booking
+export default Booking;

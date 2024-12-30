@@ -180,6 +180,40 @@ export const getBooking = async (req, res) => {
   }
 }
 
+// export const getUserBookings = async (req, res) => {
+//   try {
+//     const { id: userId, role } = req.user; // Lấy userId và role từ middleware xác thực
+
+//     // Tìm danh sách booking theo vai trò của người dùng
+//     let bookings = [];
+//     if (role === 'user') {
+//       // Nếu là user, tìm các booking mà họ đã tạo
+//       bookings = await Booking.find({ userId });
+//     } else if (role === 'maid') {
+//       // Nếu là maid, tìm các booking mà họ tham gia
+//       bookings = await Booking.find({ maidId: userId });
+//     }
+
+//     // Kiểm tra nếu không có booking nào
+//     if (!bookings || bookings.length === 0) {
+//       return res.status(404).json({ message: 'Không có booking nào được tìm thấy.' });
+//     }
+
+//     // Trả về danh sách booking
+//     res.status(200).json({
+//       message: 'Lấy danh sách booking thành công.',
+//       bookings,
+//     });
+//   } catch (error) {
+//     console.error('Lỗi khi lấy danh sách booking:', error.message);
+//     res.status(500).json({
+//       message: 'Lỗi hệ thống.',
+//       error: error.message,
+//     });
+//   }
+// };
+
+
 export const getAllBookings = async (req, res) => {
   try {
 
@@ -195,72 +229,70 @@ export const getAllBookings = async (req, res) => {
   }
 };
 
-export const getUserOrMaidBookings = async (req, res) => {
+export const getUserBookings = async (req, res) => {
   try {
-    const { id: userId, role } = req.user
+    const { id: userId } = req.user; // Lấy id từ thông tin user đã xác thực
 
-    let bookings
+    // Tìm các booking liên quan đến userId hoặc maidId
+    const bookings = await Booking.find({
+      $or: [{ userId: userId }, { maidId: userId }],
+    }).populate('userId maidId'); // Populate để lấy thông tin chi tiết user và maid
 
-    if (role === 'maid') {
-      bookings = await Booking.find({ maidId: userId }).populate('userId maidId')
-    }
-    else if (role === 'user') {
-      bookings = await Booking.find({ userId: userId }).populate('userId maidId')
-    }
-    else {
-      return res.status(403).json({ message: 'Access denied: Admin cannot use this route.' })
+    if (!bookings || bookings.length === 0) {
+      return res.status(404).json({ message: 'Không có booking nào được tìm thấy.' });
     }
 
     res.status(200).json({
-      message: 'Bookings retrieved successfully.',
-      bookings
-    })
+      message: 'Lấy danh sách booking thành công.',
+      bookings,
+    });
   } catch (error) {
-    console.error('Error retrieving bookings:', error.message)
-    res.status(500).json({ message: 'Internal server error.', error: error.message })
+    console.error('Error retrieving bookings:', error.message);
+    res.status(500).json({ message: 'Lỗi hệ thống.', error: error.message });
   }
-}
+};
+
 
 export const cancelBooking = async (req, res) => {
   try {
-    const { bookingId } = req.params
-    const { id: userId, role } = req.user
+    const { bookingId } = req.params;
+    const { id: userId, role } = req.user;
 
-    const booking = await Booking.findById(bookingId)
+    // Chỉ cho phép người dùng hủy booking
+    if (role !== 'user') {
+      return res.status(403).json({ message: 'Access denied: Only users can cancel bookings.' });
+    }
+
+    const booking = await Booking.findById(bookingId);
 
     if (!booking) {
-      return res.status(404).json({ message: 'Booking not found.' })
+      return res.status(404).json({ message: 'Booking not found.' });
     }
 
-    if (role === 'user') {
-      if (booking.userId.toString() !== userId) {
-        return res.status(403).json({ message: 'Access denied: You are not the owner of this booking.' })
-      }
-      if (booking.status !== 'pending') {
-        return res.status(400).json({ message: 'You can only cancel bookings with status "pending".' })
-      }
-    } else if (role === 'maid') {
-      if (booking.maidId?.toString() !== userId) {
-        return res.status(403).json({ message: 'Access denied: You are not assigned to this booking.' })
-      }
-      if (booking.status !== 'confirmed') {
-        return res.status(400).json({ message: 'You can only cancel bookings with status "confirmed".' })
-      }
-    } else if (role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied: You cannot cancel this booking.' })
+    // Kiểm tra quyền sở hữu booking
+    if (booking.userId.toString() !== userId) {
+      return res.status(403).json({ message: 'Access denied: You are not the owner of this booking.' });
     }
 
-    booking.status = 'cancelled'
-    await booking.save()
+    // Chỉ cho phép hủy khi trạng thái là "pending" hoặc "confirmed"
+    if (!['pending', 'confirmed'].includes(booking.status)) {
+      return res.status(400).json({
+        message: 'You can only cancel bookings with status "pending" or "confirmed".',
+      });
+    }
+
+    // Cập nhật trạng thái thành "cancelled"
+    booking.status = 'cancelled';
+    await booking.save();
 
     res.status(200).json({
       message: 'Booking cancelled successfully.',
-      booking
-    })
+      booking,
+    });
   } catch (error) {
-    console.error('Error cancelling booking:', error.message)
-    res.status(500).json({ message: 'Internal server error.', error: error.message })
+    console.error('Error cancelling booking:', error.message);
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
   }
-}
+};
 
 

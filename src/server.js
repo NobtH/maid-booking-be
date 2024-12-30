@@ -12,6 +12,7 @@ import maidRouter from '~/routes/maidRoute'
 import cron from 'node-cron'
 import cors from 'cors'
 import { sendReminderEmails } from '~/services/emailService'
+import userRouter from './routes/userRoute'
 
 dotenv.config()
 
@@ -29,15 +30,9 @@ const START_SERVER = () => {
   app.options('*', cors());
 
   app.use('/api', authRouter)
+  app.use('/api', userRouter)
   app.use('/api', maidRouter);
   app.use('/api', bookingRouter)
-  app.use((req, res, next) => {
-    console.log(`[${req.method}] ${req.originalUrl}`);
-    console.log('Headers:', req.headers);
-    console.log('Body:', req.body);
-    next();
-  });
-  
   app.use('/api', reviewRouter)
   app.use('/api', adminRouter)
 

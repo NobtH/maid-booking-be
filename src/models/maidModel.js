@@ -5,15 +5,11 @@ const MaidSchema = new mongoose.Schema({
   age: { type: Number, required: true },
   experience: { type: Number, required: true },
   location: { type: String, required: true },
-  ratings: { type: [Number], default: [] },
+  ratings: { type: Number, default: 0 },
   totalRatings: { type: Number, default: 0 },
   totalScore: { type: Number, default: 0 },
   description: { type: String, default: '' }
 }, { timestamps: true })
-
-MaidSchema.virtual('averageRating').get(function () {
-  return this.totalRatings > 0 ? this.totalScore / this.totalRatings : 0
-})
 
 const Maid = mongoose.model('Maid', MaidSchema, 'maids')
 

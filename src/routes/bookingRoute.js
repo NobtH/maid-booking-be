@@ -6,29 +6,31 @@ import { createBooking,
   getBooking,
   getAllBookings,
   getUserOrMaidBookings,
-  cancelBooking } from '~/controllers/bookingController'
+  cancelBooking, 
+  getUserBookings} from '~/controllers/bookingController'
 import { requireSignIn, isMaid, isAdmin } from '~/middlewares/authValidation'
 
 const bookingRouter = express.Router()
 
 bookingRouter.post('/bookings/create', requireSignIn, createBooking)
 
+bookingRouter.get('/bookings/mine', requireSignIn, getUserBookings)
+
 bookingRouter.get('/bookings/:bookingId', requireSignIn, getBooking)
 
-bookingRouter.post('/bookings/:bookingId/accept', requireSignIn, isMaid,(req, res, next) => {
-  console.log('PATCH /bookings/:bookingId/accept is called');
-  next();
-}, acceptBooking)
+bookingRouter.post('/bookings/:bookingId/accept', requireSignIn, acceptBooking)
 
-bookingRouter.put('/bookings/:bookingId/complete', requireSignIn, isMaid, completeBooking)
+bookingRouter.patch('/bookings/:bookingId/complete', requireSignIn, completeBooking)
 
-bookingRouter.put('/bookings/:bookingId/cancel', requireSignIn, cancelBooking)
+bookingRouter.patch('/bookings/:bookingId/cancel', requireSignIn, cancelBooking)
 
 bookingRouter.put('/bookings/:bookingId', requireSignIn, updateBookingByUser)
 
-bookingRouter.get('/bookings/mine', requireSignIn, getUserOrMaidBookings)
-
-
 bookingRouter.get('/bookings', getAllBookings)
+
+bookingRouter.get('/bookings', requireSignIn, getUserBookings)
+
+
+
 
 export default bookingRouter
