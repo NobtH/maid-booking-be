@@ -7,6 +7,7 @@ import { registerController,
   getUser } from '~/controllers/authController.js'
 import { validateRegister } from '~/middlewares/validate.js'
 import { requireSignIn, isAdmin } from '~/middlewares/authValidation'
+import User from '~/models/userModel'
 
 const authRouter = express.Router()
 
@@ -16,8 +17,10 @@ authRouter.post('/forgot-password', forgotPasswordController)
 
 authRouter.post('/login', loginController)
 
-authRouter.get('/protected-route', requireSignIn, (req, res) => {
-  res.status(200).json({ message: 'You have access.', user: req.user })
+authRouter.get('/protected-route', requireSignIn, async (req, res) => {
+  const userId = req.user.id; // Lấy `userId` từ token
+  const user = await User.findById(userId);
+  res.json(user);
 })
 
 authRouter.get('/users/:userId', requireSignIn, isAdmin, getUser)

@@ -19,17 +19,25 @@ const START_SERVER = () => {
   const app = express()
 
   app.use(express.json())
-
   app.use(cors({
-    origin: 'http://localhost:3000', // Địa chỉ frontend của bạn
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'], // Đảm bảo rằng header Authorization được phép
+    origin: 'http://localhost:3000', // Chỉ cho phép từ frontend
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'], // Các phương thức được phép
+    allowedHeaders: ['Content-Type', 'Authorization'], // Các header được phép
+    credentials: true // Nếu cần gửi cookie
   }));
-  app.use(express.json());
+  
+  app.options('*', cors());
 
   app.use('/api', authRouter)
   app.use('/api', maidRouter);
   app.use('/api', bookingRouter)
+  app.use((req, res, next) => {
+    console.log(`[${req.method}] ${req.originalUrl}`);
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    next();
+  });
+  
   app.use('/api', reviewRouter)
   app.use('/api', adminRouter)
 

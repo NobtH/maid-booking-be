@@ -55,7 +55,10 @@ export const registerValidationSchema = Joi.object({
       'string.empty': 'Location is required for maids.'
     }),
     otherwise: Joi.forbidden()
-  })
+  }),
+  description: Joi.string().max(1000).optional().messages({
+    'string.max': 'Address cannot exceed 1000 characters.'
+  }),
 });
 
 export const validateRegister = (req, res, next) => {

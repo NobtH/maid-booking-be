@@ -11,6 +11,7 @@ const BookingSchema = new mongoose.Schema(
     location: { type: String, required: true },
     phone: { type: String, required: true },
     description: { type: String, default: '' },
+    title: { type: String, default: 'Tìm người giúp việc' },
     status: {
       type: String,
       enum: ['pending', 'confirmed', 'completed', 'cancelled'],

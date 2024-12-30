@@ -7,7 +7,8 @@ const MaidSchema = new mongoose.Schema({
   location: { type: String, required: true },
   ratings: { type: [Number], default: [] },
   totalRatings: { type: Number, default: 0 },
-  totalScore: { type: Number, default: 0 }
+  totalScore: { type: Number, default: 0 },
+  description: { type: String, default: '' }
 }, { timestamps: true })
 
 MaidSchema.virtual('averageRating').get(function () {

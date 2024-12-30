@@ -8,7 +8,7 @@ import { hashPassword } from '~/helpers/authHelper'
 
 export const registerController = async (req, res) => {
   try {
-    const { name, email, password, phone, address, role, age, experience, location } = req.body
+    const { name, email, password, phone, address, role, age, experience, location, description } = req.body
 
     const existingUser = await User.findOne({ email })
     if (existingUser) {
@@ -36,7 +36,8 @@ export const registerController = async (req, res) => {
         userId: user._id,
         age,
         experience,
-        location
+        location,
+        description
       })
     }
 
@@ -82,7 +83,6 @@ export const loginController = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     )
-
     res.status(200).json({
       message: 'Login successful.',
       token,

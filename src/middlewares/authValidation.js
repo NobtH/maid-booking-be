@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken'
+import jwt, { decode } from 'jsonwebtoken'
 
 export const requireSignIn = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1]

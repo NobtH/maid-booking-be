@@ -5,12 +5,12 @@ import { sendEmail } from '~/services/emailService'
 
 export const createBooking = async (req, res) => {
   try {
-    const { userId } = req.user
-    const { date, from, to, price, location, phone, description } = req.body
+    const userId = req.user.id
+    const { date, from, to, price, location, phone, description, title } = req.body
 
     const user = await User.findById(userId)
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' })
+      return res.status(404).json({ message: 'User not found in db' })
     }
 
     if (!date || !from || !to || !price || !location || !phone) {
@@ -33,7 +33,8 @@ export const createBooking = async (req, res) => {
       price,
       location,
       phone,
-      description
+      description,
+      title
     })
 
     res.status(201).json({
@@ -48,6 +49,9 @@ export const createBooking = async (req, res) => {
 
 export const acceptBooking = async (req, res) => {
   try {
+    console.log('Accept Booking Controller Called');
+    console.log('Request Params:', req.params);
+    console.log('Request User:', req.user);
     const { bookingId } = req.params
     const maidId = req.user.id
 
@@ -161,17 +165,9 @@ export const getBooking = async (req, res) => {
     const { bookingId } = req.params
     const { id: userId, role } = req.user
 
-    const booking = await Booking.findById(bookingId).populate('userId maidId')
+    const booking = await Booking.findById(bookingId)
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found.' })
-    }
-
-    if (
-      role !== 'admin' &&
-      booking.userId._id.toString() !== userId &&
-      booking.maidId?.toString() !== userId
-    ) {
-      return res.status(403).json({ message: 'Access denied: You are not authorized to view this booking.' })
     }
 
     res.status(200).json({
@@ -186,21 +182,18 @@ export const getBooking = async (req, res) => {
 
 export const getAllBookings = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied: Only admins can view all bookings.' })
-    }
 
-    const bookings = await Booking.find().populate('userId maidId')
+    const bookings = await Booking.find({ status: 'pending' }).populate('userId maidId');
 
     res.status(200).json({
-      message: 'All bookings retrieved successfully.',
+      message: 'Pending bookings retrieved successfully.',
       bookings
-    })
+    });
   } catch (error) {
-    console.error('Error retrieving bookings:', error.message)
-    res.status(500).json({ message: 'Internal server error.', error: error.message })
+    console.error('Error retrieving bookings:', error.message);
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
   }
-}
+};
 
 export const getUserOrMaidBookings = async (req, res) => {
   try {
