@@ -8,7 +8,8 @@ const MaidSchema = new mongoose.Schema({
   ratings: { type: Number, default: 0 },
   totalRatings: { type: Number, default: 0 },
   totalScore: { type: Number, default: 0 },
-  description: { type: String, default: '' }
+  description: { type: String, default: '' },
+  isFree: { type: Boolean, default: true }
 }, { timestamps: true })
 
 const Maid = mongoose.model('Maid', MaidSchema, 'maids')

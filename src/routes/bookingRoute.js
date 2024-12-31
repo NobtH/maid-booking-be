@@ -8,7 +8,7 @@ import { createBooking,
   getUserOrMaidBookings,
   cancelBooking, 
   getUserBookings} from '~/controllers/bookingController'
-import { requireSignIn, isMaid, isAdmin } from '~/middlewares/authValidation'
+import { requireSignIn } from '~/middlewares/authValidation'
 
 const bookingRouter = express.Router()
 

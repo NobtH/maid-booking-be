@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import Booking from '~/models/bookingModel'
+import Maid from '~/models/maidModel'
 import User from '~/models/userModel'
 import { sendEmail } from '~/services/emailService'
 
@@ -64,6 +65,15 @@ export const acceptBooking = async (req, res) => {
     if (booking.maidId) {
       return res.status(400).json({ message: 'Booking has already been accepted by another maid.' })
     }
+    const maid = await Maid.findOne({ userId: maidId });
+    if (!maid) {
+      return res.status(404).json({ message: 'Maid not found for this user.' });
+    }
+    if (maid.isFree === false) {
+      return res.status(400).json({ message: 'Bạn không thể nhận 2 việc 1 lúc' })
+    }
+    maid.isFree = false
+    await maid.save()
 
     booking.maidId = maidId
     booking.status = 'confirmed'
@@ -96,30 +106,122 @@ export const acceptBooking = async (req, res) => {
 
 export const completeBooking = async (req, res) => {
   try {
-    const { bookingId } = req.params
+    const { bookingId } = req.params;
 
-    const booking = await Booking.findById(bookingId)
+    // Tìm Booking bằng bookingId
+    const booking = await Booking.findById(bookingId);
 
     if (!booking) {
-      return res.status(404).json({ message: 'Booking not found.' })
+      return res.status(404).json({ message: 'Booking not found.' });
     }
 
     if (booking.status !== 'confirmed') {
-      return res.status(400).json({ message: 'Only confirmed bookings can be completed.' })
+      return res.status(400).json({ message: 'Only confirmed bookings can be completed.' });
     }
 
-    booking.status = 'completed'
-    await booking.save()
+    const maid = await Maid.findOne({ userId: booking.maidId });
+
+    if (!maid) {
+      return res.status(404).json({ message: 'Maid not found for this booking.' });
+    }
+
+    booking.status = 'completed';
+    await booking.save();
+
+    maid.isFree = true;
+    await maid.save();
 
     res.status(200).json({
       message: 'Booking completed successfully.',
-      booking
-    })
+      booking,
+      maid,
+    });
   } catch (error) {
-    console.error('Error completing booking:', error.message)
-    res.status(500).json({ message: 'Internal server error.', error: error.message })
+    console.error('Error completing booking:', error.message);
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
+  }
+};
+
+export const cancelBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { id: userId, role } = req.user;
+
+    // Chỉ cho phép người dùng hủy booking
+    if (role !== 'user') {
+      return res.status(403).json({ message: 'Access denied: Only users can cancel bookings.' });
+    }
+
+    const booking = await Booking.findById(bookingId).populate('userId maidId');
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found.' });
+    }
+
+    // Kiểm tra quyền sở hữu booking
+    if (booking.userId._id.toString() !== userId) {
+      return res.status(403).json({ message: 'Access denied: You are not the owner of this booking.' });
+    }
+
+    // Chỉ cho phép hủy khi trạng thái là "pending" hoặc "confirmed"
+    if (!['pending', 'confirmed'].includes(booking.status)) {
+      return res.status(400).json({
+        message: 'You can only cancel bookings with status "pending" or "confirmed".',
+      });
+    }
+
+    // Nếu trạng thái là "confirmed", cập nhật trạng thái isFree của Maid
+    if (booking.status === 'confirmed' && booking.maidId) {
+      const maid = await Maid.findOne({ userId: booking.maidId._id });
+      if (maid) {
+        maid.isFree = true; // Cập nhật trạng thái isFree
+        await maid.save();
+      }
+    }
+
+    // Cập nhật trạng thái booking thành "cancelled"
+    booking.status = 'cancelled';
+    await booking.save();
+
+    // Gửi email thông báo
+    if (booking.maidId && booking.maidId.email) {
+      const maidMessage = `
+        Dear ${booking.maidId.name},
+        The booking scheduled on ${booking.date} has been cancelled by the user.
+        Booking details:
+        - Location: ${booking.location}
+        - Price: ${booking.price}
+        - Time: ${booking.from} to ${booking.to}
+        
+        Thank you for understanding!
+      `;
+      await sendEmail(booking.maidId.email, 'Booking Cancellation Notification', maidMessage);
+    }
+
+    if (booking.userId && booking.userId.email) {
+      const userMessage = `
+        Dear ${booking.userId.name},
+        Your booking scheduled on ${booking.date} has been successfully cancelled.
+        Booking details:
+        - Location: ${booking.location}
+        - Price: ${booking.price}
+        - Time: ${booking.from} to ${booking.to}
+
+        Thank you for using our service!
+      `;
+      await sendEmail(booking.userId.email, 'Booking Cancellation Confirmation', userMessage);
+    }
+
+    res.status(200).json({
+      message: 'Booking cancelled successfully and notifications sent.',
+      booking,
+    });
+  } catch (error) {
+    console.error('Error cancelling booking:', error.message);
+    res.status(500).json({ message: 'Internal server error.', error: error.message});
   }
 }
+
 
 export const updateBookingByUser = async (req, res) => {
   try {
@@ -253,46 +355,6 @@ export const getUserBookings = async (req, res) => {
 };
 
 
-export const cancelBooking = async (req, res) => {
-  try {
-    const { bookingId } = req.params;
-    const { id: userId, role } = req.user;
 
-    // Chỉ cho phép người dùng hủy booking
-    if (role !== 'user') {
-      return res.status(403).json({ message: 'Access denied: Only users can cancel bookings.' });
-    }
-
-    const booking = await Booking.findById(bookingId);
-
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found.' });
-    }
-
-    // Kiểm tra quyền sở hữu booking
-    if (booking.userId.toString() !== userId) {
-      return res.status(403).json({ message: 'Access denied: You are not the owner of this booking.' });
-    }
-
-    // Chỉ cho phép hủy khi trạng thái là "pending" hoặc "confirmed"
-    if (!['pending', 'confirmed'].includes(booking.status)) {
-      return res.status(400).json({
-        message: 'You can only cancel bookings with status "pending" or "confirmed".',
-      });
-    }
-
-    // Cập nhật trạng thái thành "cancelled"
-    booking.status = 'cancelled';
-    await booking.save();
-
-    res.status(200).json({
-      message: 'Booking cancelled successfully.',
-      booking,
-    });
-  } catch (error) {
-    console.error('Error cancelling booking:', error.message);
-    res.status(500).json({ message: 'Internal server error.', error: error.message });
-  }
-};
 
 
