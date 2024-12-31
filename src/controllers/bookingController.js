@@ -352,7 +352,9 @@ export const getUserBookings = async (req, res) => {
     console.error('Error retrieving bookings:', error.message);
     res.status(500).json({ message: 'Lỗi hệ thống.', error: error.message });
   }
-};
+}
+
+
 
 
 
